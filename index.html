@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bali Villa Portfolio</title>
+<!--
+  ╔══════════════════════════════════════════════════════╗
+  ║  BALI VILLA PORTFOLIO TRACKER                        ║
+  ║  Replace YOUR_WORKER_URL below with your             ║
+  ║  Cloudflare Worker URL after deployment.             ║
+  ╚══════════════════════════════════════════════════════╝
+-->
+<script>
+  // ← REPLACE THIS with your Cloudflare Worker URL
+  // e.g. "https://bali-villas.yourname.workers.dev"
+  const API_URL = "https://bali-villas.giulio-c61.workers.dev/";
+</script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#ffffff;--bg2:#f9fafb;--border:#e5e7eb;--border2:#d1d5db;
+  --text:#111827;--text2:#6b7280;--text3:#9ca3af;
+  --green:#0F6E56;--red:#993C1D;--blue:#185FA5;
+  --radius:8px;--radius-lg:12px;
+}
+@media(prefers-color-scheme:dark){
+  :root{--bg:#1a1a1a;--bg2:#242424;--border:#333;--border2:#444;--text:#f0f0f0;--text2:#9ca3af;--text3:#6b7280;}
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);font-size:13px;min-height:100vh}
+#app{max-width:900px;margin:0 auto;padding:1rem}
+.hero{background:linear-gradient(135deg,#04342C 0%,#0F6E56 50%,#085041 100%);border-radius:var(--radius-lg);padding:1.5rem 1.5rem 1rem;margin-bottom:1rem;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-40px;right:-40px;width:180px;height:180px;border-radius:50%;background:rgba(29,158,117,0.18);pointer-events:none}
+.hero-title{font-size:22px;font-weight:500;color:#9FE1CB;letter-spacing:-0.3px;margin-bottom:2px}
+.hero-sub{font-size:12px;color:#5DCAA5;margin-bottom:1rem}
+.villa-pills{display:flex;gap:8px;flex-wrap:wrap}
+.vpill{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:500;text-decoration:none;border:1px solid;transition:opacity 0.15s}
+.vpill:hover{opacity:0.8}
+.vpill-teal{background:rgba(29,158,117,0.2);color:#9FE1CB;border-color:rgba(93,202,165,0.35)}
+.vpill-blue{background:rgba(24,95,165,0.25);color:#B5D4F4;border-color:rgba(55,138,221,0.35)}
+.vpill-coral{background:rgba(216,90,48,0.2);color:#F5C4B3;border-color:rgba(240,153,123,0.35)}
+.vpill-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.tab-bar{display:flex;gap:2px;border-bottom:1px solid var(--border);margin-bottom:1.25rem;flex-wrap:wrap}
+.tab{padding:7px 13px;font-size:12px;cursor:pointer;border:none;background:transparent;color:var(--text2);border-radius:var(--radius) var(--radius) 0 0;font-weight:400}
+.tab:hover{color:var(--text)}
+.tab.active{background:var(--bg2);color:var(--text);font-weight:500}
+.card{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1rem 1.25rem;margin-bottom:1rem}
+.card-teal{border-left:3px solid #1D9E75}
+.card-blue{border-left:3px solid #185FA5}
+.card-coral{border-left:3px solid #D85A30}
+.metric{background:var(--bg2);border-radius:var(--radius);padding:0.7rem 1rem}
+.label{font-size:11px;color:var(--text2);margin-bottom:3px}
+.val{font-size:15px;font-weight:500}
+.grid4{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-bottom:1rem}
+.sec{font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:0.05em;margin:12px 0 6px}
+.badge-up{display:inline-block;font-size:10px;padding:1px 6px;border-radius:5px;background:#f0fdf4;color:#15803d;margin-left:4px}
+.badge-dn{display:inline-block;font-size:10px;padding:1px 6px;border-radius:5px;background:#fef2f2;color:#b91c1c;margin-left:4px}
+.badge-cost-up{display:inline-block;font-size:10px;padding:1px 6px;border-radius:5px;background:#fef2f2;color:#b91c1c;margin-left:4px}
+.badge-cost-dn{display:inline-block;font-size:10px;padding:1px 6px;border-radius:5px;background:#f0fdf4;color:#15803d;margin-left:4px}
+.cost-row{display:flex;justify-content:space-between;font-size:12px;padding:3px 0;border-bottom:1px solid var(--border);align-items:center}
+.cost-label{color:var(--text2)}
+.tax-note{font-size:11px;padding:3px 8px;border-radius:5px;background:#eff6ff;color:#1d4ed8;display:inline-block;margin-left:8px}
+.anomaly-box{background:#fffbeb;border:1px solid #fcd34d;border-radius:var(--radius);padding:.75rem;margin-bottom:12px}
+.info-box{background:#E1F5EE;border:1px solid #9FE1CB;border-radius:var(--radius);padding:.75rem;margin-bottom:1rem;font-size:12px;color:#085041}
+.sync-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:.9rem 1.1rem;margin-bottom:.6rem}
+.sync-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.sync-ok{font-size:11px;color:#0F6E56}
+.sync-err{font-size:11px;color:#993C1D}
+.sync-loading{font-size:11px;color:#185FA5}
+.sync-neutral{font-size:11px;color:var(--text2)}
+.url-panel{display:none;margin-top:8px}
+.url-panel.open{display:block}
+.oneoff-row{cursor:pointer;user-select:none}
+.oneoff-row:hover .cost-label{color:var(--text)}
+.oneoff-caret{font-size:9px;color:var(--text2);margin-left:5px;display:inline-block;transition:transform 0.15s}
+.oneoff-caret.open{transform:rotate(90deg)}
+.oneoff-hint-txt{font-size:10px;color:var(--text3);margin-left:4px}
+.oneoff-panel{background:var(--bg2);border-radius:var(--radius);overflow:hidden;max-height:0;transition:max-height 0.2s ease,padding 0.15s}
+.oneoff-panel.open{max-height:500px;padding:8px 10px}
+.oneoff-item{display:flex;justify-content:space-between;font-size:11px;padding:4px 0;border-bottom:1px solid var(--border)}
+.oneoff-item:last-child{border-bottom:none}
+.oneoff-item-desc{color:var(--text2);flex:1;padding-right:12px}
+.oneoff-item-amt{font-weight:500;white-space:nowrap}
+.oneoff-footer{font-size:10px;color:var(--text2);margin-top:6px;padding-top:5px;border-top:1px solid var(--border)}
+.oneoff-no-data{font-size:11px;color:var(--text2);font-style:italic;padding:4px 0}
+.not-configured{background:#fffbeb;border:1px solid #f59e0b;border-radius:var(--radius);padding:12px 16px;margin-bottom:1rem;font-size:12px;color:#92400e}
+select,input[type=month],input[type=text]{border:1px solid var(--border2);border-radius:var(--radius);padding:5px 8px;font-size:12px;background:var(--bg);color:var(--text)}
+button{border:1px solid var(--border2);border-radius:var(--radius);padding:6px 12px;font-size:12px;background:var(--bg);color:var(--text);cursor:pointer}
+button:hover{background:var(--bg2)}
+button:disabled{opacity:0.5;cursor:not-allowed}
+textarea{border:1px solid var(--border2);border-radius:var(--radius);padding:8px;font-size:11px;font-family:monospace;width:100%;resize:vertical;background:var(--bg);color:var(--text)}
+canvas{width:100%!important}
+</style>
+</head>
+<body>
+<div id="app">Loading…</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+// ── Storage: localStorage (works outside Claude) ──────────────────────────────
+const store = {
+  get(key){ try{const v=localStorage.getItem(key);return v?{value:v}:null}catch(e){return null} },
+  set(key,val){ try{localStorage.setItem(key,val)}catch(e){} },
+  del(key){ try{localStorage.removeItem(key)}catch(e){} }
+};
+
+// ── API call via Worker ───────────────────────────────────────────────────────
+async function callAI(body){
+  if(!API_URL||API_URL==="YOUR_WORKER_URL") throw new Error("Worker URL not configured — see the comment at the top of index.html");
+  const res=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+  return res.json();
+}
+
+// ── Constants ─────────────────────────────────────────────────────────────────
+const VC={"Auraya Vista":"#1D9E75","Young S9":"#185FA5","Young U4":"#D85A30"};
+const VLINKS={"Auraya Vista":"https://www.booking.com/hotel/id/8-pecatu-luxurious-4br-tropical-escape-in-uluwatu.en-gb.html","Young S9":"https://www.airbnb.com/hosting/listings/editor/785933224251322382/details","Young U4":"https://www.airbnb.com/rooms/612609764165302839"};
+const DEFAULT_IDS={"Auraya Vista":"1lNTXjmC0k4Mc8Z7o2cCpOAuSGkYi5VIN_19pNnix1o0","Young S9":"15pki_8HQhUB0rEFa7nvjY5hlKdmFlMBUK_gJPs6GEdQ","Young U4":"1Q4WviYyJkIMB92QWh2KK7I3ZSHen4x2IdyPCrZcQlz0"};
+const fmt=(n,d=0)=>isNaN(n)||n==null?"—":new Intl.NumberFormat("en-US",{minimumFractionDigits:d,maximumFractionDigits:d}).format(n);
+const fmtM=n=>isNaN(n)||n==null?"—":"Rp "+fmt(Math.round(n));
+const pct=n=>isNaN(n)||n==null?"—":(n*100).toFixed(1)+"%";
+const COST_CATS=["management","young_commission","pr_fee","electricity","laundry","amenities","staff","cleaning","maintenance_oneoff","ac","water_tank","other","badung_tax","withholding_tax"];
+const CAT_LABELS={management:"Management fee",young_commission:"Young commission (15%)",pr_fee:"Young PR fee",electricity:"Electricity",laundry:"Laundry",amenities:"Amenities",staff:"Staff",cleaning:"Cleaning",maintenance_oneoff:"One-off maintenance",ac:"AC servicing",water_tank:"Water tank (trucking)",other:"Other costs (incl. local tax)",badung_tax:"Badung tax (10% rev)",withholding_tax:"Withholding tax (10% net)"};
+const CAT_GROUPS={"Management & fees":["management","young_commission","pr_fee"],"Operations":["electricity","laundry","amenities","staff","cleaning","water_tank"],"Maintenance":["maintenance_oneoff","ac"],"Other & taxes":["other","badung_tax","withholding_tax"]};
+const VILLAS=["Auraya Vista","Young S9","Young U4"];
+const TABS=["Summary","Trends","ROI","AI Insights","Add Data"];
+const LEASE_CONFIG={"Auraya Vista":{idr:6440000000,usd:400000,startYear:2025,startQ:1,termYears:35},"Young S9":{idr:4427500000,usd:275000,startYear:2025,startQ:1,termYears:35},"Young U4":{idr:5740000000,usd:400000,startYear:2022,startQ:1,termYears:35}};
+
+const SEED={
+  "2025-09":{"Auraya Vista":{revenue:137466907,costs:{management:14108532,young_commission:0,pr_fee:0,electricity:5501904,laundry:1565000,amenities:3828667,staff:0,cleaning:5900000,maintenance_oneoff:918462,ac:0,water_tank:0,other:110488,badung_tax:0,withholding_tax:0},oneoff_items:[{desc:"Minor repairs & fixtures",amt:918462}]},"Young S9":{revenue:68665135,costs:{management:2500000,young_commission:10297270,pr_fee:255000,electricity:1861916,laundry:1235857,amenities:407745,staff:0,cleaning:1715830,maintenance_oneoff:596205,ac:0,water_tank:0,other:463834,badung_tax:0,withholding_tax:0},oneoff_items:[{desc:"Minor repairs & fixtures",amt:596205}]},"Young U4":{revenue:86523658,costs:{management:3750000,young_commission:12978549,pr_fee:255000,electricity:9027476,laundry:3459441,amenities:2539488,staff:0,cleaning:6664721,maintenance_oneoff:6021107,ac:0,water_tank:2166667,other:7772174,badung_tax:0,withholding_tax:0},oneoff_items:[{desc:"Structural/pool repairs",amt:4500000},{desc:"Equipment & fixtures",amt:1521107}]}},
+  "2025-10":{"Auraya Vista":{revenue:96433335,costs:{management:8403669,young_commission:0,pr_fee:0,electricity:6079471,laundry:1479000,amenities:6889833,staff:0,cleaning:6000000,maintenance_oneoff:1036801,ac:0,water_tank:0,other:1925813,badung_tax:0,withholding_tax:0},oneoff_items:[{desc:"Repairs & minor fixtures",amt:1036801}]},"Young S9":{revenue:61575051,costs:{management:2500000,young_commission:9236258,pr_fee:255000,electricity:2259001,laundry:1133238,amenities:1536126,staff:0,cleaning:1766891,maintenance_oneoff:7550000,ac:0,water_tank:0,other:461048,badung_tax:0,withholding_tax:0},note:"Oct: New water heater Rp7.55M",oneoff_items:[{desc:"New water heater",amt:7550000}]},"Young U4":{revenue:114063174,costs:{management:3750000,young_commission:17109476,pr_fee:255000,electricity:9548893,laundry:3491304,amenities:2030660,staff:0,cleaning:6047806,maintenance_oneoff:14105333,ac:0,water_tank:2906667,other:1320181,badung_tax:0,withholding_tax:0},oneoff_items:[{desc:"Major structural/pool repair",amt:10000000},{desc:"Equipment & fixtures",amt:4105333}]}},
+  "2025-11":{"Auraya Vista":{revenue:62917484,costs:{management:4952079,young_commission:0,pr_fee:0,electricity:6538719,laundry:1818533,amenities:1833855,staff:0,cleaning:6000000,maintenance_oneoff:1106111,ac:0,water_tank:0,other:183965,badung_tax:0,withholding_tax:0},oneoff_items:[{desc:"Repairs & fixtures",amt:1106111}]},"Young S9":{revenue:47511050,costs:{management:2500000,young_commission:7126658,pr_fee:255000,electricity:2119297,laundry:1000643,amenities:330094,staff:0,cleaning:1778316,maintenance_oneoff:291285,ac:0,water_tank:0,other:1601648,badung_tax:0,withholding_tax:0},oneoff_items:[{desc:"Minor repairs",amt:291285}]},"Young U4":{revenue:90961386,costs:{management:3750000,young_commission:13644208,pr_fee:255000,electricity:7764046,laundry:2586783,amenities:531242,staff:0,cleaning:5871868,maintenance_oneoff:8720470,ac:0,water_tank:3986667,other:4668009,badung_tax:0,withholding_tax:0},oneoff_items:[{desc:"Pool & structural repairs",amt:5500000},{desc:"Equipment & fixtures",amt:3220470}]}},
+  "2025-12":{"Auraya Vista":{revenue:109044942,costs:{management:10659422,young_commission:0,pr_fee:0,electricity:5383582,laundry:1969000,amenities:2625433,staff:0,cleaning:6000000,maintenance_oneoff:941667,ac:0,water_tank:833333,other:124900,badung_tax:0,withholding_tax:0},oneoff_items:[{desc:"Repairs & fixtures",amt:941667}]},"Young S9":{revenue:51782811,costs:{management:2500000,young_commission:7767422,pr_fee:255000,electricity:2071956,laundry:892643,amenities:583800,staff:0,cleaning:1666167,maintenance_oneoff:464269,ac:0,water_tank:0,other:283530,badung_tax:0,withholding_tax:0},oneoff_items:[{desc:"Minor repairs",amt:464269}]},"Young U4":{revenue:117332262,costs:{management:3750000,young_commission:17599839,pr_fee:255000,electricity:8602322,laundry:2363975,amenities:13883286,staff:0,cleaning:6150205,maintenance_oneoff:14294775,ac:0,water_tank:7626667,other:1458556,badung_tax:0,withholding_tax:0},note:"Dec: linen restock in amenities",oneoff_items:[{desc:"Pool & structural works",amt:8000000},{desc:"Equipment purchase",amt:3800000},{desc:"Furniture & fittings",amt:2494775}]}},
+  "2026-01":{"Auraya Vista":{revenue:58410250,costs:{management:4280331,young_commission:0,pr_fee:0,electricity:5301359,laundry:2219000,amenities:2191900,staff:5300833,cleaning:6001666,maintenance_oneoff:1671667,ac:360000,water_tank:416667,other:1004654,badung_tax:0,withholding_tax:0},oneoff_items:[{desc:"Repairs & fixtures",amt:1671667}]},"Young S9":{revenue:47707969,costs:{management:2500000,young_commission:7156195,pr_fee:255000,electricity:2030730,laundry:954643,amenities:469843,staff:1237796,cleaning:1549426,maintenance_oneoff:13250000,ac:0,water_tank:0,other:5507321,badung_tax:0,withholding_tax:0},note:"Jan: Water booster Rp13.25M",oneoff_items:[{desc:"Water pressure booster pump",amt:13250000}]},"Young U4":{revenue:100481145,costs:{management:3750000,young_commission:15072172,pr_fee:255000,electricity:7142858,laundry:4072050,amenities:2656127,staff:3603697,cleaning:6317829,maintenance_oneoff:38482857,ac:300000,water_tank:6228571,other:9608673,badung_tax:0,withholding_tax:0},note:"Jan: AC 2pk + groundtank + WH Rp38.5M",oneoff_items:[{desc:"2× AC units (supply & install)",amt:18000000},{desc:"Underground water tank",amt:12000000},{desc:"Water heater replacement",amt:6482857},{desc:"Plumbing & connection works",amt:2000000}]}},
+  "2026-02":{"Auraya Vista":{revenue:75842355,costs:{management:6174071,young_commission:0,pr_fee:0,electricity:5600671,laundry:2647000,amenities:2918050,staff:5300000,cleaning:6000000,maintenance_oneoff:3506296,ac:0,water_tank:1583333,other:0,badung_tax:0,withholding_tax:0},oneoff_items:[{desc:"Structural & pool repairs",amt:2500000},{desc:"Fixtures & fittings",amt:1006296}]},"Young S9":{revenue:33683127,costs:{management:2500000,young_commission:5052469,pr_fee:255000,electricity:1765029,laundry:1156071,amenities:2117029,staff:1250077,cleaning:1545165,maintenance_oneoff:666667,ac:0,water_tank:0,other:3505435,badung_tax:0,withholding_tax:0},oneoff_items:[{desc:"Minor repairs",amt:666667}]},"Young U4":{revenue:105410725,costs:{management:3750000,young_commission:15811609,pr_fee:255000,electricity:6546735,laundry:3002625,amenities:2396069,staff:3605071,cleaning:6772362,maintenance_oneoff:17861000,ac:295000,water_tank:3666667,other:4444356,badung_tax:0,withholding_tax:0},note:"U4: linen restock Rp17M in oneoff",oneoff_items:[{desc:"Full linen set restock (all rooms)",amt:17000000},{desc:"Minor repairs & fixtures",amt:861000}]}},
+  "2026-03":{"Auraya Vista":{revenue:90665069,costs:{management:7994785,young_commission:0,pr_fee:0,electricity:5427696,laundry:2639000,amenities:330200,staff:5300000,cleaning:6000000,maintenance_oneoff:2636667,ac:345000,water_tank:1583333,other:2898600,badung_tax:0,withholding_tax:0},oneoff_items:[{desc:"Pool & structural repairs",amt:1800000},{desc:"Fixtures & equipment",amt:836667}]},"Young S9":{revenue:64393018,costs:{management:2500000,young_commission:9658953,pr_fee:255000,electricity:2255636,laundry:997540,amenities:713651,staff:1280387,cleaning:1581787,maintenance_oneoff:1160000,ac:110000,water_tank:0,other:3359720,badung_tax:0,withholding_tax:0},oneoff_items:[{desc:"Repairs & minor works",amt:1160000}]},"Young U4":{revenue:142753188,costs:{management:3750000,young_commission:21412978,pr_fee:255000,electricity:7681817,laundry:4088323,amenities:1856000,staff:3630076,cleaning:7009221,maintenance_oneoff:1625500,ac:95000,water_tank:6200000,other:6040139,badung_tax:0,withholding_tax:0},oneoff_items:[{desc:"Repairs & fixtures",amt:1625500}]}},
+  "2026-04":{"Auraya Vista":{revenue:87338197,costs:{management:6477133,young_commission:0,pr_fee:0,electricity:6560774,laundry:2548000,amenities:2579150,staff:5100000,cleaning:6000000,maintenance_oneoff:975000,ac:570000,water_tank:2750000,other:2407583,badung_tax:6600629,withholding_tax:4533993},note:"Apr 2026: Bali taxes applied",oneoff_items:[{desc:"Repairs & fixtures",amt:975000}]},"Young S9":{revenue:57003825,costs:{management:2500000,young_commission:8550574,pr_fee:255000,electricity:2388191,laundry:1017571,amenities:580231,staff:1305909,cleaning:1566193,maintenance_oneoff:1404583,ac:17917,water_tank:0,other:4910071,badung_tax:0,withholding_tax:0},oneoff_items:[{desc:"Repairs & minor works",amt:1404583}]},"Young U4":{revenue:82500215,costs:{management:3750000,young_commission:12375032,pr_fee:255000,electricity:7148369,laundry:3731478,amenities:2874898,staff:3382631,cleaning:7003809,maintenance_oneoff:9101700,ac:95000,water_tank:8000000,other:7403535,badung_tax:0,withholding_tax:0},oneoff_items:[{desc:"Pool recoating & waterproofing",amt:5200000},{desc:"Sunbed replacement (set)",amt:2162700},{desc:"Pump replacement",amt:1464000},{desc:"Minor repairs & fixtures",amt:275000}]}},
+  "2026-05":{"Young U4":{revenue:0,costs:{management:3750000,young_commission:0,pr_fee:255000,electricity:8157108,laundry:2548348,amenities:3323209,staff:0,cleaning:6954587,maintenance_oneoff:2073000,ac:65000,water_tank:7809524,other:530864,badung_tax:0,withholding_tax:0},note:"May: costs only, revenue pending",oneoff_items:[{desc:"Exterior repaint (walls)",amt:945000},{desc:"Handshower & bathroom fittings repaint",amt:650000},{desc:"Pool lamp & transformer",amt:475000}]}},
+  "2026-06":{"Young U4":{revenue:0,costs:{management:3750000,young_commission:0,pr_fee:255000,electricity:0,laundry:0,amenities:175000,staff:0,cleaning:0,maintenance_oneoff:0,ac:0,water_tank:0,other:1231400,badung_tax:0,withholding_tax:0},note:"Jun: PARTIAL"}}
+};
+
+function totalCosts(c={}){return COST_CATS.reduce((s,k)=>s+(parseFloat(c?.[k])||0),0)}
+function ownerPayout(e){if(!e)return 0;return(parseFloat(e.revenue)||0)-totalCosts(e.costs)}
+function netBeforeTax(e){if(!e)return 0;const rev=parseFloat(e.revenue)||0;const c=COST_CATS.filter(k=>k!=="badung_tax"&&k!=="withholding_tax").reduce((s,k)=>s+(parseFloat(e.costs?.[k])||0),0);return rev-c}
+function getSortedMonths(h){return Object.keys(h).sort()}
+function getRevMonths(h){return getSortedMonths(h).filter(m=>VILLAS.some(v=>h[m]?.[v]?.revenue>0))}
+
+let S={tab:0,history:{},loading:true,insightText:"",insightLoading:false,
+  addVilla:VILLAS[0],addMonth:"2026-05",addMode:"upload",addRaw:"",parseResult:null,
+  parseLoading:false,syncStatus:{},urlEditing:null,sourceIds:{...DEFAULT_IDS},summaryMonth:"",oneoffOpen:{}};
+
+async function init(){
+  try{
+    const r=store.get("villa_history_v5");
+    let h=r?JSON.parse(r.value):{};
+    Object.entries(SEED).forEach(([m,villas])=>{if(!h[m])h[m]={};Object.entries(villas).forEach(([v,e])=>{h[m][v]=e;})});
+    Object.keys(h).forEach(m=>{if(m<"2025-09")delete h[m]});
+    S.history=h;S.summaryMonth=getRevMonths(h).slice(-1)[0]||"";
+    store.set("villa_history_v5",JSON.stringify(h));
+    const sid=store.get("source_ids_v1");
+    if(sid)S.sourceIds={...DEFAULT_IDS,...JSON.parse(sid.value)};
+  }catch(e){S.history=JSON.parse(JSON.stringify(SEED))}
+  S.loading=false;render();
+}
+function saveHistory(h){S.history=h;store.set("villa_history_v5",JSON.stringify(h))}
+function saveSourceIds(){store.set("source_ids_v1",JSON.stringify(S.sourceIds))}
+function ss(p){Object.assign(S,p);render()}
+
+function waitForChartThenDraw(){
+  if(window.Chart){drawCharts();return}
+  let tries=0;const t=setInterval(()=>{tries++;if(window.Chart){clearInterval(t);drawCharts();}else if(tries>40)clearInterval(t);},100);
+}
+function drawCharts(){
+  if(!window.Chart)return;
+  const ms=getRevMonths(S.history).slice(-12);
+  const labels=ms.map(m=>m.slice(5)+"/"+m.slice(2,4));
+  ["revC","payoutC","marginC"].forEach(id=>{const ex=window.Chart.getChart(id);if(ex)ex.destroy()});
+  const mk=(id,ds,yf)=>{const el=document.getElementById(id);if(!el)return;new window.Chart(el,{type:"line",data:{labels,datasets:ds},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>yf(v)}}}}})};
+  mk("revC",VILLAS.map(v=>({label:v,data:ms.map(m=>Math.round((S.history[m]?.[v]?.revenue||0)/1e6)),borderColor:VC[v],backgroundColor:VC[v]+"22",tension:0.3,pointRadius:3,borderWidth:2})),v=>v+"M");
+  mk("payoutC",VILLAS.map(v=>({label:v,data:ms.map(m=>Math.round(ownerPayout(S.history[m]?.[v])/1e6)),borderColor:VC[v],backgroundColor:VC[v]+"22",tension:0.3,pointRadius:3,borderWidth:2})),v=>v+"M");
+  mk("marginC",VILLAS.map(v=>({label:v,data:ms.map(m=>{const e=S.history[m]?.[v];if(!e||!e.revenue)return null;return Math.round(ownerPayout(e)/e.revenue*1000)/10}),borderColor:VC[v],backgroundColor:VC[v]+"22",tension:0.3,pointRadius:3,borderWidth:2,spanGaps:true})),v=>v+"%");
+}
+
+function E(tag,attrs,ch){
+  const e=document.createElement(tag);
+  Object.entries(attrs||{}).forEach(([k,v])=>{
+    if(k==="style"&&typeof v==="object")Object.assign(e.style,v);
+    else if(k==="className")e.className=v;
+    else if(k.startsWith("on"))e.addEventListener(k.slice(2).toLowerCase(),v);
+    else e.setAttribute(k,v);
+  });
+  const children=Array.isArray(ch)?ch:(ch!=null?[ch]:[]);
+  children.forEach(c=>{if(c==null||c===false)return;e.appendChild(typeof c==="string"?document.createTextNode(c):c)});
+  return e;
+}
+function vdot(v,sz=9){return E("span",{style:{display:"inline-block",width:sz+"px",height:sz+"px",borderRadius:"50%",background:VC[v],marginRight:"5px",verticalAlign:"middle"}})}
+function metric(label,val){return E("div",{className:"metric"},[E("p",{className:"label"},[label]),E("p",{className:"val"},[val||"—"])])}
+
+function renderHero(){
+  const lf=getRevMonths(S.history).slice(-1)[0]||"";
+  const pills=VILLAS.map(v=>{const cls=v==="Auraya Vista"?"teal":v==="Young S9"?"blue":"coral";return E("a",{href:VLINKS[v],className:"vpill vpill-"+cls,target:"_blank"},[E("span",{className:"vpill-dot",style:{background:VC[v]}}),v+" ↗"]);});
+  return E("div",{className:"hero"},[E("p",{className:"hero-title"},["Bali Villa Portfolio"]),E("p",{className:"hero-sub"},[Object.keys(S.history).length+" months · Sept 2025–present · latest: "+lf]),E("div",{className:"villa-pills"},pills)]);
+}
+
+function renderSummary(){
+  const rms=getRevMonths(S.history);const lf=rms.slice(-1)[0]||"";const pf=rms.slice(-2)[0]||"";
+  const sel=S.summaryMonth||lf;const lm=S.history[sel]||{};const pm=S.history[pf]||{};
+  const hasTax=VILLAS.some(v=>((lm[v]?.costs?.badung_tax||0)+(lm[v]?.costs?.withholding_tax||0))>0);
+  const topCtrl=E("div",{style:{display:"flex",gap:"12px",alignItems:"center",marginBottom:"1rem",flexWrap:"wrap"}},[
+    E("select",{onChange:e=>ss({summaryMonth:e.target.value})},rms.slice().reverse().map(m=>{const o=document.createElement("option");o.value=m;o.textContent=m;if(m===sel)o.selected=true;return o})),
+    hasTax?E("span",{className:"tax-note"},["⚖ Bali taxes active"]):null
+  ].filter(Boolean));
+  const vcards=VILLAS.map(v=>{
+    const e=lm[v];const pe=pm[v];
+    if(!e||!e.revenue)return E("div",{className:"card",style:{opacity:"0.5"}},[E("p",{style:{fontSize:"13px",color:"var(--text2)"}},[vdot(v),v+" — no revenue for "+sel])]);
+    const rev=e.revenue||0;const pay=ownerPayout(e);const preTax=netBeforeTax(e);
+    const prevPay=pe?ownerPayout(pe):null;const payChg=(prevPay!=null&&prevPay!==0)?(pay-prevPay)/Math.abs(prevPay):null;
+    const ycm=e.costs?.young_commission||0;const bt=e.costs?.badung_tax||0;const wt=e.costs?.withholding_tax||0;
+    const badge=payChg!=null?E("span",{className:payChg>=0?"badge-up":"badge-dn"},[payChg>=0?"↑":"↓",pct(Math.abs(payChg))," vs prev"]):null;
+    const cls="card card-"+(v==="Auraya Vista"?"teal":v==="Young S9"?"blue":"coral");
+    const payMet=E("div",{className:"metric"},[E("p",{className:"label"},["Owner payout"]),E("p",{className:"val",style:{color:pay>=0?"#0F6E56":"#993C1D"}},[fmtM(pay)]),badge].filter(Boolean));
+    const mets=E("div",{className:"grid4"},[metric("Gross revenue",fmtM(rev)),ycm>0?metric("Young commission",fmtM(ycm)):null,metric("Net before Bali tax",fmtM(preTax)),(bt+wt)>0?metric("Bali taxes",fmtM(bt+wt)):null,payMet,metric("Payout margin",pct(rev>0?pay/rev:null))].filter(Boolean));
+    const groups=Object.entries(CAT_GROUPS).map(([gn,keys])=>{
+      const items=keys.filter(k=>e.costs?.[k]>0);if(!items.length)return null;
+      return E("div",{},[E("p",{className:"sec"},[gn]),...items.map(k=>{
+        const val=e.costs[k]||0;const prev=pe?.costs?.[k]||0;
+        const chg=prev>0?(val-prev)/prev:null;const fH=chg!=null&&chg>0.25;const fL=chg!=null&&chg<-0.25;
+        const b=(fH||fL)?E("span",{className:fH?"badge-cost-up":"badge-cost-dn"},[fH?"↑":"↓",pct(Math.abs(chg))]):null;
+        if(k==="maintenance_oneoff"){
+          const key=v+sel;const isOpen=!!(S.oneoffOpen[key]);
+          const idata=(e.oneoff_items||[]).slice().sort((a,b2)=>b2.amt-a.amt);const hasItems=idata.length>0;
+          const caret=E("span",{className:"oneoff-caret"+(isOpen?" open":"")},["▶"]);
+          const hint=E("span",{className:"oneoff-hint-txt"},[isOpen?"":"click to expand"]);
+          const row=E("div",{className:"cost-row oneoff-row",onClick:()=>{S.oneoffOpen={...S.oneoffOpen,[key]:!isOpen};render()}},[
+            E("span",{style:{display:"flex",alignItems:"center",color:"var(--text2)"}},[CAT_LABELS[k],caret,hint]),
+            E("span",{},[fmtM(val),b].filter(Boolean))
+          ]);
+          const panelContent=!hasItems?[E("p",{className:"oneoff-no-data"},["No breakdown available. Pull fresh data via Add Data tab."])]:[...idata.map(item=>E("div",{className:"oneoff-item"},[E("span",{className:"oneoff-item-desc"},[item.desc]),E("span",{className:"oneoff-item-amt"},[fmtM(item.amt)])])),E("div",{className:"oneoff-footer"},["Total itemised: "+fmtM(idata.reduce((s,i)=>s+i.amt,0))])];
+          return E("div",{},[row,E("div",{className:"oneoff-panel"+(isOpen?" open":"")},panelContent)]);
+        }
+        return E("div",{className:"cost-row"},[E("span",{className:"cost-label"},[CAT_LABELS[k]]),E("span",{},[fmtM(val),b].filter(Boolean))]);
+      })]);
+    }).filter(Boolean);
+    return E("div",{className:cls},[E("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"10px"}},[E("span",{style:{fontWeight:"500",fontSize:"15px"}},[vdot(v),v]),e.note?E("span",{style:{fontSize:"11px",color:"var(--text2)",maxWidth:"300px",textAlign:"right"}},[e.note]):null].filter(Boolean)),mets,...groups]);
+  });
+  const ytdMs=getSortedMonths(S.history).filter(m=>m.startsWith("2026")&&VILLAS.some(v=>S.history[m]?.[v]?.revenue>0));
+  const tR=VILLAS.reduce((s,v)=>s+(lm[v]?.revenue||0),0);const tP=VILLAS.reduce((s,v)=>s+ownerPayout(lm[v]),0);
+  const yR=ytdMs.reduce((s,m)=>s+VILLAS.reduce((s2,v)=>s2+(S.history[m]?.[v]?.revenue||0),0),0);
+  const yP=ytdMs.reduce((s,m)=>s+VILLAS.reduce((s2,v)=>s2+ownerPayout(S.history[m]?.[v]),0),0);
+  return E("div",{},[topCtrl,...vcards,E("div",{className:"card"},[E("p",{className:"sec",style:{marginTop:"0"}},["Portfolio total — "+sel]),E("div",{className:"grid4"},[metric("Monthly gross rev",fmtM(tR)),metric("Monthly owner payout",fmtM(tP)),metric("YTD 2026 gross rev",fmtM(yR)),metric("YTD 2026 owner payout",fmtM(yP))])])]);
+}
+
+function renderTrends(){
+  const rms=getRevMonths(S.history).slice(-12);
+  const cc=(title,id)=>E("div",{className:"card"},[E("p",{className:"sec",style:{marginTop:"0"}},[title]),E("div",{style:{display:"flex",gap:"16px",marginBottom:"8px"}},VILLAS.map(v=>E("span",{style:{fontSize:"12px",color:"var(--text2)",display:"flex",alignItems:"center"}},[vdot(v),v]))),E("div",{style:{position:"relative",height:"200px"}},[E("canvas",{id})])]);
+  const hdr=rms.map(m=>E("th",{style:{textAlign:"right",padding:"4px 3px",color:"var(--text2)",fontWeight:"400"}},[m.slice(5)+"/"+m.slice(2,4)]));
+  const rows=["electricity","water_tank","young_commission","maintenance_oneoff","staff","other"].flatMap(k=>VILLAS.map(v=>{
+    const vals=rms.map(m=>S.history[m]?.[v]?.costs?.[k]||0);if(!vals.some(x=>x>0))return null;
+    const last=vals[vals.length-1];const prev=vals[vals.length-2]||0;const chg=prev>0?(last-prev)/prev:null;const flag=chg!=null&&Math.abs(chg)>0.2;
+    return E("tr",{style:{borderTop:"1px solid var(--border)"}},[E("td",{style:{padding:"4px 0",color:"var(--text2)",fontSize:"11px"}},[CAT_LABELS[k]]),E("td",{style:{padding:"4px 0",fontSize:"11px"}},[vdot(v),v.replace("Young ","").replace("Auraya Vista","Auraya")]),...vals.map(val=>E("td",{style:{textAlign:"right",padding:"4px 3px"}},[val?fmtM(val):"—"])),E("td",{style:{textAlign:"right",padding:"4px 0"}},[flag?E("span",{className:chg>0?"badge-cost-up":"badge-cost-dn"},[chg>0?"↑":"↓",pct(Math.abs(chg))]):E("span",{},"—")])]);
+  })).filter(Boolean);
+  return E("div",{},[cc("Gross revenue (Rp M)","revC"),cc("Owner payout (Rp M)","payoutC"),cc("Payout margin %","marginC"),E("div",{className:"card"},[E("p",{className:"sec",style:{marginTop:"0"}},["Key cost categories — all months"]),E("div",{style:{overflowX:"auto"}},[E("table",{style:{width:"100%",fontSize:"12px",borderCollapse:"collapse",tableLayout:"fixed"}},[E("thead",[E("tr",{},[E("th",{style:{textAlign:"left",padding:"4px 0",color:"var(--text2)",fontWeight:"400",width:"110px"}},["Category"]),E("th",{style:{textAlign:"left",padding:"4px 0",color:"var(--text2)",fontWeight:"400",width:"70px"}},["Villa"]),...hdr,E("th",{style:{textAlign:"right",padding:"4px 0",color:"var(--text2)",fontWeight:"400"}},["Trend"])])]),E("tbody",{},[...rows])])])])]);
+}
+
+function renderROI(){
+  const now=new Date();const rms=getRevMonths(S.history);const lf=rms.slice(-1)[0]||"";
+  const cards=VILLAS.map(v=>{
+    const cfg=LEASE_CONFIG[v];const lease=cfg.idr;
+    const vm=rms.filter(m=>S.history[m]?.[v]?.revenue>0);const ytdMs=vm.filter(m=>m.startsWith("2026"));
+    const le=S.history[lf]?.[v];const mp=le?ownerPayout(le):null;
+    const ytdP=ytdMs.reduce((s,m)=>s+ownerPayout(S.history[m][v]),0);
+    const ap=vm.length>0?(vm.reduce((s,m)=>s+ownerPayout(S.history[m][v]),0)/vm.length)*12:null;
+    const ls=new Date(cfg.startYear,(cfg.startQ-1)*3,1);const aD=lease/cfg.termYears;
+    const yE=(now-ls)/(365.25*24*3600*1000);const yR=Math.max(0,cfg.termYears-yE);const cD=Math.min(lease,yE*aD);
+    const cls="card card-"+(v==="Auraya Vista"?"teal":v==="Young S9"?"blue":"coral");
+    return E("div",{className:cls},[E("p",{style:{fontWeight:"500",fontSize:"15px",marginBottom:"12px"}},[vdot(v),v]),E("p",{className:"sec"},["Returns"]),E("div",{className:"grid4"},[metric("Lease (IDR)",fmtM(lease)),metric("Lease (USD)","$"+fmt(cfg.usd,0)),metric(lf+" payout",mp!=null?fmtM(mp):"—"),metric(lf+" monthly ROI",mp!=null?pct(mp/lease):"—"),metric("YTD 2026 payout",fmtM(ytdP)),metric("YTD 2026 ROI",pct(lease>0?ytdP/lease:null)),metric("Proj. annual payout",ap!=null?fmtM(ap):"—"),metric("Proj. annual ROI",ap!=null?pct(ap/lease):"—"),metric("Payback (yrs)",ap>0?(lease/ap).toFixed(1):"—"),metric("Months data",""+vm.length)]),E("p",{className:"sec"},["Depreciation ("+cfg.termYears+"yr)"]),E("div",{className:"grid4"},[metric("Annual depr. IDR",fmtM(aD)),metric("Annual depr. USD","$"+fmt(cfg.usd/cfg.termYears,0)),metric("Years elapsed",yE.toFixed(1)),metric("Remaining",yR.toFixed(1)),metric("Cumul. depr.",fmtM(cD)),metric("Book value",fmtM(Math.max(0,lease-cD))),metric("Expires",""+(cfg.startYear+cfg.termYears))]),E("p",{style:{fontSize:"11px",color:"var(--text2)",marginTop:"4px"}},["Net of depr. yield: "+(ap!=null&&lease>0?pct((ap-aD)/lease):"—")])]);
+  });
+  return E("div",{},[E("div",{className:"info-box"},["All ROI uses owner payout (after all costs). Depreciation is informational."]), ...cards]);
+}
+
+async function genInsights(){
+  ss({insightLoading:true,insightText:""});
+  const rms=getRevMonths(S.history).slice(-6);
+  const summary=rms.map(m=>VILLAS.map(v=>{const e=S.history[m]?.[v];if(!e||!e.revenue)return null;const pay=ownerPayout(e);return m+"|"+v+"|Rev:Rp"+fmt(Math.round(e.revenue))+"|Payout:Rp"+fmt(Math.round(pay))+"|Margin:"+(pay/e.revenue*100).toFixed(1)+"%|Elec:Rp"+fmt(Math.round(e.costs?.electricity||0))+"|WaterTank:Rp"+fmt(Math.round(e.costs?.water_tank||0))+"|OneOff:Rp"+fmt(Math.round(e.costs?.maintenance_oneoff||0))}).filter(Boolean).join("\n")).join("\n");
+  const ytdMs=getSortedMonths(S.history).filter(m=>m.startsWith("2026")&&VILLAS.some(v=>S.history[m]?.[v]?.revenue>0));
+  const ytd=VILLAS.map(v=>{const rs=ytdMs.reduce((s,m)=>s+(S.history[m]?.[v]?.revenue||0),0);const ps=ytdMs.reduce((s,m)=>s+ownerPayout(S.history[m]?.[v]),0);return v+" YTD 2026: Rev Rp"+fmt(Math.round(rs))+", Payout Rp"+fmt(Math.round(ps))}).join("\n");
+  try{
+    const d=await callAI({model:"claude-sonnet-4-6",max_tokens:1800,messages:[{role:"user",content:"Sharp financial briefing for 3-villa Bali portfolio.\n\nData:\n"+summary+"\n\nYTD 2026:\n"+ytd+"\n\nCONTEXT: Owner payout=revenue minus all costs. Young S9/U4: 15% commission+Rp255k PR fee. Auraya: Bali taxes from Apr 2026. Water tank=recurring trucking.\n\nCover: 1) Latest month per villa 2) Cost anomalies >25% 3) Elec & water trends 4) One-offs distorting margins 5) Tax drag Auraya 6) Commission drag 7) Cross-villa margin comparison 8) YTD concerns 9) 2-3 watch items. Direct, actual numbers."}]});
+    ss({insightText:d.content?.find(b=>b.type==="text")?.text||"No insights.",insightLoading:false});
+  }catch(e){ss({insightText:"Error: "+e.message,insightLoading:false})}
+}
+function renderInsights(){
+  const isConfigured=API_URL&&API_URL!=="YOUR_WORKER_URL";
+  const btn=E("div",{style:{marginBottom:"1rem",display:"flex",gap:"10px",alignItems:"center"}},[E("button",{onClick:genInsights,disabled:S.insightLoading||!isConfigured},[S.insightLoading?"Generating…":"↗ Generate AI briefing"]),E("span",{style:{fontSize:"12px",color:"var(--text2)"}},["~10 sec"])]);
+  const warning=!isConfigured?E("div",{className:"not-configured"},["⚠ Worker URL not configured — set API_URL at the top of index.html to enable AI features."]):null;
+  if(!S.insightText)return E("div",{},[warning,btn,E("div",{className:"card",style:{color:"var(--text2)",fontSize:"13px"}},["Click 'Generate AI briefing' for written analysis."])].filter(Boolean));
+  const lines=S.insightText.split("\n").map(line=>{
+    if(line.startsWith("##"))return E("h3",{style:{fontSize:"15px",fontWeight:"500",margin:"1rem 0 0.25rem"}},[line.replace(/^#+\s*/,"")]);
+    if(!line.trim())return E("br",{});
+    const p=E("p",{style:{margin:"0.2rem 0",fontSize:"13px",lineHeight:"1.7"}});
+    p.innerHTML=line.replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>");return p;
+  });
+  return E("div",{},[warning,btn,E("div",{className:"card",style:{lineHeight:"1.7"}},lines)].filter(Boolean));
+}
+
+function renderAddData(){
+  const isConfigured=API_URL&&API_URL!=="YOUR_WORKER_URL";
+  const warning=!isConfigured?E("div",{className:"not-configured"},["⚠ Worker URL not configured — AI parsing and sheet sync are disabled until you set API_URL in index.html."]):null;
+
+  const monthPicker=E("div",{style:{display:"flex",alignItems:"center",gap:"10px",marginBottom:"1rem"}},[
+    E("span",{style:{fontSize:"12px",color:"var(--text2)"}},["Pull month:"]),
+    E("input",{type:"month",value:S.addMonth,onChange:e=>ss({addMonth:e.target.value})})
+  ]);
+
+  async function syncVilla(villa,month){
+    if(!isConfigured){alert("Set API_URL first.");return}
+    const fileId=S.sourceIds[villa];
+    if(!fileId){ss({syncStatus:{...S.syncStatus,[villa+month]:{err:"No file ID"}}});return}
+    ss({syncStatus:{...S.syncStatus,[villa+month]:{loading:true}}});
+    const isYoung=villa!=="Auraya Vista";
+    const prompt=`Extract cost data AND one-off maintenance items for villa "${villa}", month ${month}, from Google Sheets file ID: ${fileId}. management=${isYoung?"2500000 (S9) or 3750000 (U4)":"12.5% of revenue"}. young_commission=${isYoung?"15% of gross, 0 if no revenue":"0"}. pr_fee=${isYoung?"255000":"0"}. water_tank=daily truck only. maintenance_oneoff=>500k items. ac=AC service. other=garbage+internet+canang+local tax. EXCLUDE credit reversals. revenue=0 if not in sheet. Also extract each one-off item into oneoff_items sorted desc. Return ONLY JSON: {"revenue":0,"costs":{"management":0,"young_commission":0,"pr_fee":0,"electricity":0,"laundry":0,"amenities":0,"staff":0,"cleaning":0,"maintenance_oneoff":0,"ac":0,"water_tank":0,"other":0,"badung_tax":0,"withholding_tax":0},"oneoff_items":[{"desc":"","amt":0}],"anomalies":[],"note":""}`;
+    try{
+      const d=await callAI({model:"claude-sonnet-4-6",max_tokens:1200,messages:[{role:"user",content:prompt}],mcp_servers:[{type:"url",url:"https://drivemcp.googleapis.com/mcp/v1",name:"gdrive"}]});
+      const txt=(d.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("");
+      const parsed=JSON.parse(txt.replace(/```json|```/g,"").trim()||"{}");
+      ss({syncStatus:{...S.syncStatus,[villa+month]:{ok:true}},parseResult:parsed,addVilla:villa,addMonth:month});
+    }catch(e){ss({syncStatus:{...S.syncStatus,[villa+month]:{err:String(e.message||e)}}})}
+  }
+
+  const syncCards=VILLAS.map(v=>{
+    const sk=v+S.addMonth;const st=S.syncStatus[sk];const hasData=!!(S.history[S.addMonth]?.[v]);
+    const statusCls=st?.loading?"sync-loading":st?.ok?"sync-ok":st?.err?"sync-err":hasData?"sync-ok":"sync-neutral";
+    const statusTxt=st?.loading?"Pulling…":st?.ok?"✓ Pulled":st?.err?"✗ "+st.err:hasData?"Has data":"No data";
+    const isEditing=S.urlEditing===v;
+    const urlPanel=E("div",{className:"url-panel"+(isEditing?" open":"")});
+    const urlInp=document.createElement("input");
+    urlInp.type="text";urlInp.placeholder="Google Sheets file ID";urlInp.value=S.sourceIds[v]||"";
+    urlInp.style.cssText="margin-top:6px;width:100%;font-size:11px;font-family:monospace;padding:5px 8px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text)";
+    urlInp.addEventListener("input",e=>{S.sourceIds={...S.sourceIds,[v]:e.target.value};saveSourceIds()});
+    urlPanel.appendChild(urlInp);
+    urlPanel.appendChild(E("p",{style:{fontSize:"10px",color:"var(--text2)",marginTop:"4px"}},["File ID is between /d/ and /edit in the Google Sheets URL"]));
+    return E("div",{className:"sync-card"},[
+      E("div",{className:"sync-row"},[vdot(v,10),E("span",{style:{fontWeight:"500",fontSize:"13px",flex:"1"}},[v]),E("span",{className:statusCls},[statusTxt]),E("button",{onClick:()=>syncVilla(v,S.addMonth),disabled:!isConfigured||!!(st?.loading),style:{fontSize:"11px",padding:"4px 10px"}},["↗ Pull "+S.addMonth]),E("button",{onClick:()=>ss({urlEditing:isEditing?null:v}),style:{fontSize:"11px",padding:"4px 8px",color:"var(--text2)"}},["⚙ Source"])]),
+      urlPanel
+    ]);
+  });
+
+  async function parseContent(raw){
+    if(!isConfigured){alert("Set API_URL first.");return}
+    ss({parseLoading:true,parseResult:null});
+    const prompt=`Parse Bali villa cost report for "${S.addVilla}", month ${S.addMonth}. Revenue=col D gross. young_commission=15% gross. pr_fee=255000. water_tank=trucking only. maintenance_oneoff=repairs>500k. Exclude credit reversals. Local tax into other. Extract one-off items into oneoff_items sorted desc. Return ONLY JSON: {"revenue":0,"costs":{"management":0,"young_commission":0,"pr_fee":0,"electricity":0,"laundry":0,"amenities":0,"staff":0,"cleaning":0,"maintenance_oneoff":0,"ac":0,"water_tank":0,"other":0,"badung_tax":0,"withholding_tax":0},"oneoff_items":[{"desc":"","amt":0}],"anomalies":[],"note":""}\nReport:\n${raw.slice(0,8000)}`;
+    try{
+      const d=await callAI({model:"claude-sonnet-4-6",max_tokens:1200,messages:[{role:"user",content:prompt}]});
+      const txt=d.content?.find(b=>b.type==="text")?.text||"{}";
+      ss({parseResult:JSON.parse(txt.replace(/```json|```/g,"").trim()),parseLoading:false});
+    }catch(e){ss({parseResult:{error:"Parse failed: "+e.message},parseLoading:false})}
+  }
+
+  const modeOpts=[["upload","Upload file"],["text","Paste text"]];
+  const manualCard=E("div",{className:"card"},[
+    E("p",{style:{fontWeight:"500",fontSize:"14px",marginBottom:"12px"}},["Or add data manually"]),
+    E("div",{style:{display:"flex",gap:"12px",flexWrap:"wrap",marginBottom:"1rem"}},[
+      E("div",{},[E("p",{className:"label"},["Villa"]),E("select",{onChange:e=>ss({addVilla:e.target.value})},VILLAS.map(v=>{const o=document.createElement("option");o.value=v;o.textContent=v;if(v===S.addVilla)o.selected=true;return o}))]),
+      E("div",{},[E("p",{className:"label"},["Month"]),E("input",{type:"month",value:S.addMonth,style:{width:"150px"},onChange:e=>ss({addMonth:e.target.value})})]),
+      E("div",{},[E("p",{className:"label"},["Source"]),E("select",{onChange:e=>ss({addMode:e.target.value})},modeOpts.map(([v,l])=>{const o=document.createElement("option");o.value=v;o.textContent=l;if(v===S.addMode)o.selected=true;return o}))])
+    ]),
+    S.addMode==="upload"?E("div",{},[E("p",{style:{fontSize:"12px",color:"var(--text2)",marginBottom:"8px"}},["Upload cost sheet or Young revenue report."]),E("input",{type:"file",accept:".csv,.txt,.xlsx,.xls",style:{fontSize:"12px"},onChange:async e=>{const f=e.target.files[0];if(!f)return;const t=await f.text();ss({addRaw:t});parseContent(t)}})]):null,
+    S.addMode==="text"?E("div",{},[E("textarea",{placeholder:"Paste report text…",style:{minHeight:"120px"},onInput:e=>ss({addRaw:e.target.value})},[S.addRaw||""]),E("button",{onClick:()=>parseContent(S.addRaw),disabled:!isConfigured||S.parseLoading||!S.addRaw.trim(),style:{marginTop:"8px"}},[S.parseLoading?"Parsing…":"↗ Parse with AI"])]):null
+  ]);
+
+  let parsed=null;
+  if(S.parseLoading){parsed=E("div",{className:"card",style:{color:"var(--text2)",fontSize:"13px"}},["AI is reading the report…"]);}
+  else if(S.parseResult&&!S.parseResult.error){
+    const pr=S.parseResult;const totC=totalCosts(pr.costs||{});const payout=(pr.revenue||0)-totC;
+    const oneoffPreview=pr.oneoff_items?.length?[E("p",{className:"sec"},["One-off breakdown"]),...pr.oneoff_items.map(i=>E("div",{className:"cost-row"},[E("span",{className:"cost-label"},[i.desc]),E("span",{},[fmtM(i.amt)])]))]:[];
+    parsed=E("div",{className:"card"},[
+      E("p",{className:"sec",style:{marginTop:"0"}},["Preview — "+S.addVilla+" "+S.addMonth]),
+      pr.anomalies?.length?E("div",{className:"anomaly-box"},[E("p",{style:{fontSize:"12px",fontWeight:"500",color:"#92400e",margin:"0 0 4px"}},["⚠ Anomalies"]),...pr.anomalies.map(a=>E("p",{style:{fontSize:"12px",color:"#92400e",margin:"2px 0"}},[a]))]):null,
+      E("div",{className:"grid4"},[metric("Gross revenue",fmtM(pr.revenue||0)),metric("Total costs",fmtM(totC)),metric("Owner payout",fmtM(payout))]),
+      E("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"2px 16px",marginBottom:"12px"}},COST_CATS.map(k=>{const v=pr.costs?.[k]||0;if(!v)return null;return E("div",{className:"cost-row"},[E("span",{className:"cost-label"},[CAT_LABELS[k]]),E("span",{},[fmtM(v)])])}).filter(Boolean)),
+      ...oneoffPreview,
+      pr.note?E("p",{style:{fontSize:"12px",color:"var(--text2)",margin:"8px 0"}},[pr.note]):null,
+      E("div",{style:{display:"flex",gap:"8px",marginTop:"12px"}},[
+        E("button",{onClick:()=>{
+          const h={...S.history};if(!h[S.addMonth])h[S.addMonth]={};const ex=h[S.addMonth][S.addVilla]||{};
+          h[S.addMonth][S.addVilla]={revenue:(pr.revenue||0)>0?(pr.revenue||0):(ex.revenue||0),costs:pr.costs||{},note:pr.note||"",oneoff_items:pr.oneoff_items||ex.oneoff_items||[]};
+          saveHistory(h);ss({parseResult:null,addRaw:"",syncStatus:{}});alert("Saved "+S.addVilla+" — "+S.addMonth);
+        },style:{fontWeight:"500"}},["✓ Save to portfolio"]),
+        E("button",{onClick:()=>ss({parseResult:null,addRaw:""}),style:{color:"var(--text2)"}},["Discard"])
+      ])
+    ].filter(Boolean));
+  }else if(S.parseResult?.error){parsed=E("div",{className:"card",style:{color:"#b91c1c",fontSize:"13px"}},[S.parseResult.error]);}
+
+  return E("div",{},[warning,E("div",{className:"card"},[E("p",{style:{fontWeight:"500",fontSize:"14px",marginBottom:"12px"}},["↗ Pull from live cost sheets"]),E("p",{style:{fontSize:"12px",color:"var(--text2)",marginBottom:"12px"}},["Reads from Google Sheets. Click ⚙ Source to update file IDs."]),monthPicker,...syncCards]),manualCard,parsed].filter(Boolean));
+}
+
+function render(){
+  const root=document.getElementById("app");
+  if(S.loading){root.innerHTML="<div style='padding:2rem;color:var(--text2)'>Loading…</div>";return}
+  const panels=[renderSummary,renderTrends,renderROI,renderInsights,renderAddData];
+  const tabBar=E("div",{className:"tab-bar"},TABS.map((t,i)=>
+    E("button",{className:"tab"+(S.tab===i?" active":""),onClick:()=>{S.tab=i;render();if(i===1)waitForChartThenDraw();}},[t])
+  ));
+  const panel=(panels[S.tab]||renderSummary)();
+  root.innerHTML="";
+  root.appendChild(E("div",{},[renderHero(),tabBar,panel]));
+}
+
+init();
+</script>
+</body>
+</html>
